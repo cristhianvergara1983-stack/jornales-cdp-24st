@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Jornales CDP · 24ST</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3250;
+    --accent: #4f6ef7;
+    --accent2: #7c3aed;
+    --gold: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --orange: #f97316;
+    --text: #f1f5f9;
+    --muted: #64748b;
+    --subtle: #94a3b8;
+    --card-radius: 14px;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; letter-spacing: -0.5px;
+    cursor: pointer; user-select: none;
+    transition: opacity 0.2s;
+  }
+  .logo-mark:active { opacity: 0.7; }
+  .header-title { font-size: 15px; font-weight: 700; }
+  .header-sub { font-size: 11px; color: var(--muted); }
+  .week-badge {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 10px;
+    font-size: 11px; color: var(--subtle); font-weight: 600;
+  }
+
+  /* NAV */
+  .nav {
+    display: flex; gap: 0;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    flex: 0 0 auto; padding: 10px 16px;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN */
+  .main { padding: 14px; max-width: 520px; margin: 0 auto; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--card-radius); padding: 14px; margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+  }
+
+  /* DATE BAR */
+  .date-bar {
+    display: flex; gap: 6px; overflow-x: auto;
+    scrollbar-width: none; padding-bottom: 2px; margin-bottom: 14px;
+  }
+  .date-bar::-webkit-scrollbar { display: none; }
+  .day-chip {
+    flex: 0 0 auto; padding: 7px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid var(--border); background: var(--surface2);
+    color: var(--subtle); transition: all 0.15s; text-align: center;
+  }
+  .day-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .day-chip.has-data { border-color: var(--green); color: var(--green); }
+  .day-chip.active.has-data { background: var(--green); border-color: var(--green); color: #fff; }
+  .day-chip.holiday { border-color: var(--gold); color: var(--gold); }
+  .day-chip.active.holiday { background: var(--gold); border-color: var(--gold); color: #000; }
+  .day-chip .chip-name { display: block; font-size: 10px; opacity: 0.8; }
+
+  /* PERSON ROW */
+  .person-row {
+    border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 8px; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .person-row.complete { border-color: var(--green); }
+  .person-row.absent { border-color: var(--red); opacity: 0.8; }
+  .person-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; cursor: pointer;
+    background: var(--surface2);
+  }
+  .person-info { display: flex; align-items: center; gap: 10px; }
+  .person-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+  }
+  .person-name { font-size: 14px; font-weight: 600; }
+  .person-role { font-size: 10px; color: var(--muted); }
+  .person-status { font-size: 11px; font-weight: 600; }
+  .status-ok { color: var(--green); }
+  .status-absent { color: var(--red); }
+  .status-partial { color: var(--orange); }
+  .status-pending { color: var(--muted); }
+
+  .person-body { padding: 12px; background: var(--surface); display: none; }
+  .person-row.expanded .person-body { display: block; }
+
+  /* TIME INPUTS */
+  .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .field-group label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .field-group input, .field-group select, .field-group textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 11px; color: var(--text);
+    font-size: 14px; font-family: var(--font);
+    transition: border-color 0.15s;
+  }
+  .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .field-group select option { background: var(--surface2); }
+
+  /* AUSENCIA */
+  .absence-section { margin-top: 8px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .toggle-label { font-size: 13px; color: var(--subtle); }
+  .toggle {
+    position: relative; width: 44px; height: 24px;
+    background: var(--border); border-radius: 12px; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--red); }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 18px; height: 18px; border-radius: 50%; background: #fff;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 23px; }
+
+  /* FERIADO BADGE */
+  .feriado-badge {
+    background: rgba(245,158,11,0.15); border: 1px solid var(--gold);
+    border-radius: 8px; padding: 8px 10px; margin-bottom: 10px;
+    font-size: 12px; color: var(--gold); font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* HORA CALC */
+  .hora-calc {
+    background: var(--surface2); border-radius: 8px; padding: 10px 12px;
+    margin-top: 8px; display: flex; justify-content: space-between;
+    font-size: 12px; flex-wrap: wrap; gap: 4px;
+  }
+  .hora-calc span { color: var(--muted); }
+  .hora-calc strong { color: var(--text); }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%; padding: 12px; border-radius: 10px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    border: none; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:active { opacity: 0.8; }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-sm {
+    padding: 7px 14px; font-size: 12px; width: auto;
+    border-radius: 8px;
+  }
+  .btn-outline {
+    background: transparent; border: 1.5px solid var(--border);
+    color: var(--subtle);
+  }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-gold { background: var(--gold); color: #000; }
+
+  /* SUMMARY */
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .summary-stat {
+    background: var(--surface2); border-radius: 10px; padding: 12px;
+    text-align: center;
+  }
+  .summary-stat .val { font-size: 22px; font-weight: 800; }
+  .summary-stat .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+
+  /* PERSON SUMMARY ROW */
+  .ps-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .ps-row:last-child { border-bottom: none; }
+  .ps-name { font-size: 13px; font-weight: 600; }
+  .ps-detail { font-size: 11px; color: var(--muted); }
+  .ps-monto { font-size: 14px; font-weight: 700; color: var(--green); text-align: right; }
+  .ps-hrs { font-size: 11px; color: var(--muted); text-align: right; }
+
+  /* INCENTIVO */
+  .incentivo-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 8px;
+  }
+  .incentivo-row input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; color: var(--text); font-size: 13px;
+  }
+
+  /* ADD PERSON */
+  .add-person-form {
+    background: var(--surface2); border-radius: 10px; padding: 12px; margin-top: 10px;
+    display: none;
+  }
+  .add-person-form.open { display: block; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+
+  /* PIN MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px 24px; width: 300px; text-align: center;
+  }
+  .modal-icon { font-size: 40px; margin-bottom: 12px; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .pin-dots { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+  .pin-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--border); background: transparent;
+    transition: all 0.2s;
+  }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pin-key {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px; font-size: 18px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .pin-key:active { background: var(--accent); border-color: var(--accent); }
+  .pin-key.del { color: var(--red); font-size: 14px; }
+  .pin-error { color: var(--red); font-size: 12px; margin-top: 10px; height: 16px; }
+
+  /* FERIADO MANAGER */
+  .feriado-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(245,158,11,0.15); border: 1px solid var(--gold);
+    border-radius: 20px; padding: 4px 10px; font-size: 12px; color: var(--gold);
+    margin: 3px;
+  }
+  .feriado-chip button {
+    background: none; border: none; color: var(--gold);
+    cursor: pointer; font-size: 14px; line-height: 1;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--green);
+    border-radius: 20px; padding: 10px 20px; font-size: 13px; font-weight: 600;
+    color: var(--green); z-index: 2000; opacity: 0;
+    transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* SECTION ADMIN */
+  .admin-section {
+    border: 1px solid var(--accent2); border-radius: var(--card-radius);
+    background: rgba(124,58,237,0.05);
+    padding: 14px; margin-bottom: 12px;
+  }
+  .admin-badge {
+    display: inline-block; background: var(--accent2);
+    color: #fff; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; margin-bottom: 10px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+  /* EXPORT */
+  .export-section { text-align: center; padding: 20px 0 8px; }
+  .export-icon { font-size: 40px; margin-bottom: 8px; }
+  .export-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .export-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+  /* Sebastián special */
+  .sebastian-row { border-color: var(--gold) !important; }
+  .cristhian-row { border-color: var(--accent2) !important; }
+
+  .tabs-inline { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab-pill {
+    flex: 1; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    border: 1.5px solid var(--border); background: none; color: var(--muted); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-pill.active { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+
+  @media (min-width: 520px) {
+    .main { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark" id="logoMark" title="Acceso admin">24ST</div>
+    <div>
+      <div class="header-title">Jornales CDP</div>
+      <div class="header-sub">Centro de Producción</div>
+    </div>
+  </div>
+  <div class="week-badge" id="weekBadge">Cargando...</div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="showTab('registro')">📋 Registro</button>
+  <button class="nav-btn" onclick="showTab('resumen')">📊 Resumen</button>
+  <button class="nav-btn" onclick="showTab('exportar')">📤 Exportar</button>
+  <button class="nav-btn" onclick="showTab('config')">⚙️ Config</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PIN MODAL -->
+<div class="modal-overlay" id="pinModal">
+  <div class="modal">
+    <div class="modal-icon">🔐</div>
+    <div class="modal-title">Acceso Supervisor</div>
+    <div class="modal-sub">Ingresá tu PIN de 4 dígitos</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key del" onclick="pinClose()">✕</button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main" id="mainContent">
+
+  <!-- ============ TAB: REGISTRO ============ -->
+  <div id="tab-registro">
+
+    <!-- FERIADO ALERT -->
+    <div id="feriadoAlert" style="display:none" class="feriado-badge">
+      ⚠️ <span id="feriadoAlertText">Día feriado — horas trabajadas se pagan doble</span>
+    </div>
+
+    <!-- SELECTOR DE DÍA -->
+    <div class="date-bar" id="dateBar"></div>
+
+    <!-- PLANTEL FIJO -->
+    <div class="card">
+      <div class="card-title">👥 Plantel CDP</div>
+      <div id="plantillaList"></div>
+
+      <!-- EVENTUALES -->
+      <div id="eventualesList"></div>
+
+      <!-- AGREGAR EVENTUAL -->
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="btn btn-outline btn-sm" onclick="toggleAddForm('eventual')">+ Eventual</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleAddForm('prueba')">+ A prueba</button>
+      </div>
+      <div class="add-person-form" id="addPersonForm">
+        <div class="form-row">
+          <div class="field-group">
+            <label>Nombre</label>
+            <input type="text" id="newPersonName" placeholder="Nombre">
+          </div>
+          <div class="field-group">
+            <label>Tipo</label>
+            <select id="newPersonType">
+              <option value="eventual">Eventual</option>
+              <option value="prueba">A prueba</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addEventualPerson()">Agregar</button>
+      </div>
+    </div>
+
+    <!-- SECCIÓN ADMIN (oculta por defecto) -->
+    <div class="admin-section" id="adminSection" style="display:none">
+      <span class="admin-badge">🔒 Supervisor</span>
+      <div id="adminList"></div>
+    </div>
+
+  </div>
+
+  <!-- ============ TAB: RESUMEN ============ -->
+  <div id="tab-resumen" style="display:none">
+    <div class="card">
+      <div class="card-title">Semana actual</div>
+      <div class="summary-grid">
+        <div class="summary-stat">
+          <div class="val" id="sumTotalHrs">0</div>
+          <div class="lbl">Horas totales</div>
+        </div>
+        <div class="summary-stat">
+          <div class="val" style="color:var(--green)" id="sumTotalMonto">$0</div>
+          <div class="lbl">Total a pagar</div>
+        </div>
+        <div class="summary-stat">
+          <div class="val" style="color:var(--orange)" id="sumHrsExtra">0</div>
+          <div class="lbl">Hrs extras</div>
+        </div>
+        <div class="summary-stat">
+          <div class="val" style="color:var(--accent)" id="sumPersonas">0</div>
+          <div class="lbl">Personas</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Detalle por persona</div>
+      <div id="resumenPersonas"></div>
+    </div>
+
+    <!-- Incentivos / Bonos -->
+    <div class="card">
+      <div class="card-title">🎯 Incentivos / Bonos (opcional)</div>
+      <div id="incentivosSection"></div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: EXPORTAR ============ -->
+  <div id="tab-exportar" style="display:none">
+    <div class="card">
+      <div class="export-section">
+        <div class="export-icon">📊</div>
+        <div class="export-title">Planilla Semanal</div>
+        <div class="export-sub" id="exportSubtitle">Semana actual · Para tesorería y empleados</div>
+        <button class="btn btn-green" onclick="exportarExcel()">⬇️ Descargar Excel</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💬 Enviar resumen</div>
+      <button class="btn btn-outline" onclick="copiarResumenWA()" style="margin-bottom:8px">📋 Copiar texto para WhatsApp</button>
+      <div style="font-size:11px; color:var(--muted); text-align:center">Copia el resumen y pegalo en el chat de tesorería</div>
+    </div>
+
+    <div class="card" style="border-color:var(--red)">
+      <div class="card-title" style="color:var(--red)">⚠️ Zona peligrosa</div>
+      <button class="btn btn-outline btn-sm" onclick="nuevaSemana()" style="color:var(--red); border-color:var(--red)">🗑️ Iniciar nueva semana</button>
+      <div style="font-size:11px; color:var(--muted); margin-top:6px">Borra todos los registros de la semana actual</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: CONFIG ============ -->
+  <div id="tab-config" style="display:none">
+    <div class="card">
+      <div class="card-title">📅 Feriados de la semana</div>
+      <div id="feriadosConfig"></div>
+      <div style="display:flex; gap:8px; margin-top:10px; align-items:center;">
+        <select id="feriadoDaySelect" style="flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text);">
+          <option value="">Seleccionar día</option>
+        </select>
+        <button class="btn btn-gold btn-sm" onclick="addFeriado()">+ Agregar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💰 Tarifas vigentes</div>
+      <div style="font-size:13px; color:var(--subtle); line-height:2;">
+        <div>Plantel CDP: <strong style="color:var(--text)">$3.750/hr</strong></div>
+        <div>Ayelen López (jefa): <strong style="color:var(--gold)">$4.500/hr</strong></div>
+        <div>Hora extra / sábado: <strong style="color:var(--orange)">mismo valor</strong></div>
+        <div>Feriado trabajado: <strong style="color:var(--red)">doble ($)</strong></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗓️ Período semanal</div>
+      <div class="field-group" style="margin-bottom:10px">
+        <label>Fecha inicio (Lunes)</label>
+        <input type="date" id="weekStartInput" onchange="updateWeekStart()">
+      </div>
+      <div style="font-size:11px; color:var(--muted)">La semana va de lunes a viernes (sábado = extra)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ Google Sheets (opcional)</div>
+      <div class="field-group" style="margin-bottom:10px">
+        <label>Apps Script URL</label>
+        <input type="text" id="sheetsUrl" placeholder="https://script.google.com/..." onchange="saveConfig()">
+      </div>
+      <div style="font-size:11px; color:var(--muted)">Para sincronizar con Google Sheets. Dejá vacío para usar solo local.</div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ========== CONFIGURACIÓN ==========
+const PIN = '2408';
+
+const PLANTEL_FIJO = [
+  { id:'ayelen', nombre:'Ayelen Lopez', rol:'Jefa de Producción', tarifa:4500, tipo:'fijo' },
+  { id:'matias', nombre:'Matias Diaz', rol:'Producción', tarifa:3750, tipo:'fijo' },
+  { id:'german', nombre:'German Santos', rol:'Producción', tarifa:3750, tipo:'fijo' },
+  { id:'marcela_d', nombre:'Marcela Diaz', rol:'Producción', tarifa:3750, tipo:'fijo' },
+  { id:'marcela_l', nombre:'Marcela Ledesma', rol:'Producción', tarifa:3750, tipo:'fijo' },
+  { id:'milagros', nombre:'Milagros Cruz', rol:'Producción', tarifa:3750, tipo:'fijo' },
+  { id:'jorge', nombre:'Jorge Diaz', rol:'A prueba', tarifa:3750, tipo:'prueba' },
+  { id:'dario', nombre:'Dario Cajal', rol:'Eventual', tarifa:3750, tipo:'eventual' },
+  { id:'exequiel', nombre:'Exequiel', rol:'Eventual', tarifa:3750, tipo:'eventual' },
+];
+
+const PLANTEL_ADMIN = [
+  { id:'sebastian', nombre:'Sebastian', rol:'Chofer camioneta', tarifa:35000, tipo:'jornal_dia', admin:true },
+  { id:'cristhian', nombre:'Cristhian Vergara', rol:'Supervisor', tarifa:40000, tipo:'jornal_dia', admin:true },
+];
+
+const TIPO_AUSENCIA = ['Enfermedad justificada','Vacaciones','Problema familiar','Ausente sin aviso','Llegada tarde'];
+const DIAS_NOMBRE = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const DIAS_KEY = ['lun','mar','mie','jue','vie','sab'];
+
+// ========== ESTADO ==========
+let state = {
+  weekStart: null,
+  registros: {}, // { personId: { lun: {entrada, salida, ausente, tipoAusencia, obs}, ... } }
+  eventuales: [], // personas agregadas esta semana
+  feriados: [], // ['lun','mar',...]
+  incentivos: {}, // { personId: monto }
+  adminUnlocked: false,
+  currentDay: null,
+  addingType: null,
+};
+
+// ========== INIT ==========
+function init() {
+  loadState();
+  if (!state.weekStart) {
+    state.weekStart = getMonday(new Date());
+  }
+  if (!state.currentDay) {
+    state.currentDay = getCurrentDayKey();
+  }
+  renderDateBar();
+  renderPlantel();
+  renderResumen();
+  renderConfig();
+  updateWeekBadge();
+}
+
+function getMonday(d) {
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  const mon = new Date(d);
+  mon.setDate(d.getDate() + diff);
+  mon.setHours(0,0,0,0);
+  return mon;
+}
+
+function getCurrentDayKey() {
+  const day = new Date().getDay();
+  const map = {1:'lun',2:'mar',3:'mie',4:'jue',5:'vie',6:'sab'};
+  return map[day] || 'lun';
+}
+
+function getDayDate(dayKey) {
+  const idx = DIAS_KEY.indexOf(dayKey);
+  const d = new Date(state.weekStart);
+  d.setDate(d.getDate() + idx);
+  return d;
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'});
+}
+
+function updateWeekBadge() {
+  const start = new Date(state.weekStart);
+  const end = new Date(state.weekStart);
+  end.setDate(end.getDate() + 5);
+  document.getElementById('weekBadge').textContent =
+    `${formatDate(start)} – ${formatDate(end)}`;
+}
+
+// ========== TABS ==========
+function showTab(tab) {
+  ['registro','resumen','exportar','config'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['registro','resumen','exportar','config'][i]===tab);
+  });
+  if (tab==='resumen') renderResumen();
+  if (tab==='config') renderConfig();
+}
+
+// ========== DATE BAR ==========
+function renderDateBar() {
+  const bar = document.getElementById('dateBar');
+  bar.innerHTML = '';
+  DIAS_KEY.forEach((dk, i) => {
+    const d = getDayDate(dk);
+    const hasData = hasAnyData(dk);
+    const isFeriado = state.feriados.includes(dk);
+    const isActive = state.currentDay === dk;
+
+    const chip = document.createElement('div');
+    chip.className = 'day-chip' +
+      (isActive?' active':'') +
+      (hasData?' has-data':'') +
+      (isFeriado?' holiday':'');
+    chip.innerHTML = `${DIAS_NOMBRE[i]}<span class="chip-name">${formatDate(d)}</span>`;
+    chip.onclick = () => selectDay(dk);
+    bar.appendChild(chip);
+  });
+
+  // Feriado alert
+  const isFeriadoHoy = state.feriados.includes(state.currentDay);
+  document.getElementById('feriadoAlert').style.display = isFeriadoHoy ? '' : 'none';
+}
+
+function hasAnyData(dayKey) {
+  const allPersons = [...PLANTEL_FIJO, ...state.eventuales, ...PLANTEL_ADMIN];
+  return allPersons.some(p => {
+    const r = getRegistro(p.id, dayKey);
+    return r && (r.entrada || r.ausente || r.trabajo);
+  });
+}
+
+function selectDay(dk) {
+  // Close all expanded
+  document.querySelectorAll('.person-row.expanded').forEach(el => el.classList.remove('expanded'));
+  state.currentDay = dk;
+  saveState();
+  renderDateBar();
+  renderPlantel();
+}
+
+// ========== PLANTEL ==========
+function renderPlantel() {
+  const list = document.getElementById('plantillaList');
+  list.innerHTML = '';
+  PLANTEL_FIJO.forEach(p => {
+    list.appendChild(buildPersonRow(p));
+  });
+
+  // Eventuales
+  const evList = document.getElementById('eventualesList');
+  evList.innerHTML = '';
+  if (state.eventuales.length > 0) {
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.style.marginTop = '14px';
+    title.textContent = '👤 Eventuales / A prueba';
+    evList.appendChild(title);
+    state.eventuales.forEach(p => {
+      evList.appendChild(buildPersonRow(p, true));
+    });
+  }
+
+  // Admin
+  if (state.adminUnlocked) {
+    const adminList = document.getElementById('adminList');
+    adminList.innerHTML = '';
+    PLANTEL_ADMIN.forEach(p => {
+      adminList.appendChild(buildPersonRow(p));
+    });
+    document.getElementById('adminSection').style.display = '';
+  } else {
+    document.getElementById('adminSection').style.display = 'none';
+  }
+}
+
+function buildPersonRow(persona, removable = false) {
+  const dk = state.currentDay;
+  const r = getRegistro(persona.id, dk) || {};
+  const isFeriado = state.feriados.includes(dk);
+  const isSabado = dk === 'sab';
+
+  const hrs = calcHoras(r, persona, dk);
+
+  let statusText = '<span class="status-pending">— Sin registrar</span>';
+  let rowClass = '';
+
+  if (persona.tipo === 'jornal_dia') {
+    if (r.trabajo) {
+      const isFeriadoJ = state.feriados.includes(dk);
+      const montoJ = persona.tarifa * (isFeriadoJ ? 2 : 1);
+      statusText = `<span class="status-ok">✓ $${formatNum(montoJ)}</span>`;
+      rowClass = ' complete';
+    }
+  } else if (r.ausente) {
+    statusText = `<span class="status-absent">🔴 ${r.tipoAusencia||'Ausente'}</span>`;
+    rowClass = ' absent';
+  } else if (r.entrada && r.salida) {
+    rowClass = ' complete';
+    const hrsExtra = hrs.extras + hrs.sabado + hrs.feriado;
+    statusText = `<span class="status-ok">✓ ${hrs.total}h${hrsExtra>0?' (+'+(hrsExtra)+'h extra)':''}</span>`;
+  } else if (r.entrada) {
+    statusText = `<span class="status-partial">⏳ Entrada: ${r.entrada}</span>`;
+  }
+
+  const isSeb = persona.tipo === 'jornal_dia';
+  const extraClass = persona.id==='sebastian'?' sebastian-row':persona.id==='cristhian'?' cristhian-row':'';
+
+  const row = document.createElement('div');
+  row.className = `person-row${rowClass}${extraClass}`;
+  row.id = `row-${persona.id}`;
+
+  const initials = persona.nombre.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+
+  row.innerHTML = `
+    <div class="person-header" onclick="togglePerson('${persona.id}')">
+      <div class="person-info">
+        <div class="person-avatar">${initials}</div>
+        <div>
+          <div class="person-name">${persona.nombre}</div>
+          <div class="person-role">${persona.rol}${isSeb?` · $${formatNum(persona.tarifa)}/día`:''}</div>
+        </div>
+      </div>
+      <div>${statusText}</div>
+    </div>
+    <div class="person-body">
+      ${isFeriado ? `<div class="feriado-badge">⚠️ FERIADO — horas pagas al doble</div>` : ''}
+      ${buildPersonBody(persona, r, dk, isFeriado, isSabado, removable)}
+    </div>
+  `;
+  return row;
+}
+
+function buildPersonBody(persona, r, dk, isFeriado, isSabado, removable) {
+  const isSeb = persona.tipo === 'jornal_dia';
+
+  if (isSeb) {
+    // Sebastián / Cristhian: jornal por día, solo marcar si trabajó
+    return `
+      <div class="toggle-row">
+        <span class="toggle-label">¿Trabajó hoy?</span>
+        <div class="toggle ${r.trabajo?'on':''}" onclick="toggleTrabajo('${persona.id}','${dk}')"></div>
+      </div>
+      ${r.trabajo ? `
+        <div class="hora-calc">
+          <span>Jornal del día</span>
+          <strong style="color:var(--green)">$${formatNum(persona.tarifa * (isFeriado?2:1))}</strong>
+        </div>` : ''}
+      <div class="field-group" style="margin-top:8px">
+        <label>Observaciones</label>
+        <textarea id="obs-${persona.id}-${dk}" rows="2" placeholder="Notas...">${r.obs||''}</textarea>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="guardarAdmin('${persona.id}','${dk}')">✓ Guardar</button>
+      ${removable ? `<button class="btn btn-outline btn-sm" style="color:var(--red);margin-top:8px" onclick="removeEventual('${persona.id}')">Quitar</button>` : ''}
+    `;
+  }
+
+  const hrs = calcHoras(r, persona, dk);
+
+  return `
+    <div class="time-grid">
+      <div class="field-group">
+        <label>Entrada</label>
+        <input type="time" id="entrada-${persona.id}-${dk}" value="${r.entrada||'08:00'}"
+          oninput="saveHora('${persona.id}','${dk}','entrada',this.value)"
+          onchange="saveHora('${persona.id}','${dk}','entrada',this.value)"
+          ${r.ausente?'disabled':''}>
+      </div>
+      <div class="field-group">
+        <label>Salida</label>
+        <input type="time" id="salida-${persona.id}-${dk}" value="${r.salida||''}"
+          oninput="saveHora('${persona.id}','${dk}','salida',this.value)"
+          onchange="saveHora('${persona.id}','${dk}','salida',this.value)"
+          ${r.ausente?'disabled':''}>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-sm" style="margin-bottom:10px;width:100%" onclick="guardarHorasManual('${persona.id}','${dk}')">✓ Guardar horas</button>
+    <div class="toggle-row">
+      <span class="toggle-label">Ausente / No vino</span>
+      <div class="toggle ${r.ausente?'on':''}" onclick="toggleAusente('${persona.id}','${dk}')"></div>
+    </div>
+    ${r.ausente ? `
+      <div class="field-group" style="margin-top:8px">
+        <label>Motivo</label>
+        <select onchange="saveTipoAusencia('${persona.id}','${dk}',this.value)">
+          ${TIPO_AUSENCIA.map(t=>`<option ${r.tipoAusencia===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>` : ''}
+    ${r.entrada && r.salida && !r.ausente ? `
+      <div class="hora-calc">
+        <span>Normales:</span><strong>${hrs.normales}h</strong>
+        <span>Extra:</span><strong style="color:var(--orange)">${hrs.extras + hrs.sabado}h</strong>
+        ${isFeriado?`<span>Feriado (x2):</span><strong style="color:var(--red)">${hrs.total}h</strong>`:''}
+        <span>Total:</span><strong>${hrs.total}h</strong>
+        <span>Monto:</span><strong style="color:var(--green)">$${formatNum(hrs.monto)}</strong>
+      </div>` : ''}
+    <div class="field-group" style="margin-top:8px">
+      <label>Observaciones</label>
+      <textarea rows="2" placeholder="Llegada tarde, salida temprana, etc..."
+        onchange="saveObs('${persona.id}','${dk}',this.value)">${r.obs||''}</textarea>
+    </div>
+    ${removable ? `<button class="btn btn-outline btn-sm" style="color:var(--red);margin-top:8px" onclick="removeEventual('${persona.id}')">Quitar persona</button>` : ''}
+  `;
+}
+
+function togglePerson(id) {
+  const row = document.getElementById(`row-${id}`);
+  row.classList.toggle('expanded');
+}
+
+// ========== CÁLCULO DE HORAS ==========
+function calcHoras(r, persona, dk) {
+  const isSabado = dk === 'sab';
+  const isFeriado = state.feriados.includes(dk);
+
+  if (!r.entrada || !r.salida || r.ausente) {
+    return { normales:0, extras:0, sabado:0, feriado:0, total:0, monto:0 };
+  }
+
+  const [hE, mE] = r.entrada.split(':').map(Number);
+  const [hS, mS] = r.salida.split(':').map(Number);
+  const totalMins = (hS*60+mS) - (hE*60+mE);
+  if (totalMins <= 0) return { normales:0, extras:0, sabado:0, feriado:0, total:0, monto:0 };
+
+  const totalHrs = Math.round((totalMins / 60) * 100) / 100;
+  let normales = 0, extras = 0, sabado = 0, feriado = 0;
+
+  if (isFeriado) {
+    feriado = totalHrs;
+  } else if (isSabado) {
+    sabado = totalHrs;
+  } else {
+    normales = Math.min(totalHrs, 8);
+    extras = Math.max(0, totalHrs - 8);
+  }
+
+  const monto = (normales + extras + sabado) * persona.tarifa + feriado * persona.tarifa * 2;
+
+  return { normales, extras, sabado, feriado, total: totalHrs, monto: Math.round(monto) };
+}
+
+function calcTotalesPersona(persona) {
+  let totalHrs = 0, totalMonto = 0;
+  let hsNorm = 0, hsExtra = 0;
+
+  DIAS_KEY.forEach(dk => {
+    const r = getRegistro(persona.id, dk) || {};
+    if (persona.tipo === 'jornal_dia') {
+      if (r.trabajo) {
+        const isFeriado = state.feriados.includes(dk);
+        totalMonto += persona.tarifa * (isFeriado ? 2 : 1);
+        totalHrs += 1; // días
+      }
+    } else {
+      const hrs = calcHoras(r, persona, dk);
+      totalHrs += hrs.total;
+      hsNorm += hrs.normales;
+      hsExtra += hrs.extras + hrs.sabado + hrs.feriado;
+      totalMonto += hrs.monto;
+    }
+  });
+
+  const incentivo = state.incentivos[persona.id] || 0;
+  totalMonto += incentivo;
+
+  return { totalHrs, totalMonto, hsNorm, hsExtra, incentivo };
+}
+
+// ========== REGISTRO OPS ==========
+function getRegistro(personId, dayKey) {
+  if (!state.registros[personId]) return {};
+  return state.registros[personId][dayKey] || {};
+}
+
+function setRegistro(personId, dayKey, data) {
+  if (!state.registros[personId]) state.registros[personId] = {};
+  state.registros[personId][dayKey] = { ...(state.registros[personId][dayKey]||{}), ...data };
+  saveState();
+}
+
+function guardarHorasManual(personId, dk) {
+  const entradaEl = document.getElementById(`entrada-${personId}-${dk}`);
+  const salidaEl = document.getElementById(`salida-${personId}-${dk}`);
+  const entrada = entradaEl ? entradaEl.value : '';
+  const salida = salidaEl ? salidaEl.value : '';
+  if (entrada) setRegistro(personId, dk, { entrada });
+  if (salida) setRegistro(personId, dk, { salida });
+  refreshPersonRow(personId);
+  renderDateBar();
+  showToast('✓ Horas guardadas');
+}
+
+function guardarAdmin(personId, dk) {
+  const obsEl = document.getElementById("obs-"+personId+"-"+dk);
+  if (obsEl) setRegistro(personId, dk, { obs: obsEl.value });
+  refreshPersonRow(personId);
+  renderDateBar();
+  showToast("✓ Guardado");
+}
+
+function saveHora(personId, dk, field, value) {
+  setRegistro(personId, dk, { [field]: value });
+  refreshPersonRow(personId);
+  renderDateBar();
+}
+
+function saveObs(personId, dk, value) {
+  setRegistro(personId, dk, { obs: value });
+}
+
+function toggleAusente(personId, dk) {
+  const r = getRegistro(personId, dk);
+  const newVal = !r.ausente;
+  setRegistro(personId, dk, { ausente: newVal, tipoAusencia: r.tipoAusencia || TIPO_AUSENCIA[0] });
+  refreshPersonRow(personId);
+  renderDateBar();
+}
+
+function saveTipoAusencia(personId, dk, val) {
+  setRegistro(personId, dk, { tipoAusencia: val });
+}
+
+function toggleTrabajo(personId, dk) {
+  dk = dk || state.currentDay;
+  const r = getRegistro(personId, dk);
+  setRegistro(personId, dk, { trabajo: !r.trabajo });
+  refreshPersonRow(personId);
+  renderDateBar();
+  showToast(r.trabajo ? 'Día desmarcado' : '✓ Día registrado');
+}
+
+function refreshPersonRow(personId) {
+  const old = document.getElementById(`row-${personId}`);
+  if (!old) return;
+  const wasExpanded = old.classList.contains('expanded');
+  const persona = getAllPersonas().find(p => p.id === personId);
+  if (!persona) return;
+  const isRemovable = state.eventuales.some(e => e.id === personId);
+  const newRow = buildPersonRow(persona, isRemovable);
+  if (wasExpanded) newRow.classList.add('expanded');
+  old.replaceWith(newRow);
+}
+
+function getAllPersonas() {
+  return [...PLANTEL_FIJO, ...state.eventuales, ...PLANTEL_ADMIN];
+}
+
+// ========== EVENTUALES ==========
+let addingType = 'eventual';
+function toggleAddForm(type) {
+  addingType = type;
+  const form = document.getElementById('addPersonForm');
+  document.getElementById('newPersonType').value = type;
+  form.classList.toggle('open');
+}
+
+function addEventualPerson() {
+  const nombre = document.getElementById('newPersonName').value.trim();
+  if (!nombre) { showToast('Ingresá un nombre'); return; }
+  const tipo = document.getElementById('newPersonType').value;
+  const id = 'ev_' + Date.now();
+  state.eventuales.push({ id, nombre, rol: tipo==='prueba'?'A prueba':'Eventual', tarifa:3750, tipo });
+  document.getElementById('addPersonForm').classList.remove('open');
+  document.getElementById('newPersonName').value = '';
+  saveState();
+  renderPlantel();
+  showToast(`${nombre} agregado`);
+}
+
+function removeEventual(id) {
+  state.eventuales = state.eventuales.filter(p => p.id !== id);
+  saveState();
+  renderPlantel();
+}
+
+// ========== ADMIN / PIN ==========
+let pinBuffer = '';
+
+document.getElementById('logoMark').addEventListener('click', () => {
+  if (state.adminUnlocked) {
+    state.adminUnlocked = false;
+    document.getElementById('adminSection').style.display = 'none';
+    showToast('Sección supervisor cerrada');
+  } else {
+    openPin();
+  }
+});
+
+function openPin() {
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinModal').classList.add('open');
+}
+
+function pinClose() {
+  document.getElementById('pinModal').classList.remove('open');
+  pinBuffer = '';
+}
+
+function pinPress(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(() => {
+      if (pinBuffer === PIN) {
+        state.adminUnlocked = true;
+        pinClose();
+        renderPlantel();
+        showToast('✓ Acceso supervisor activado');
+      } else {
+        document.getElementById('pinError').textContent = 'PIN incorrecto';
+        pinBuffer = '';
+        updatePinDots();
+      }
+    }, 200);
+  }
+}
+
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0,-1);
+  updatePinDots();
+}
+
+function updatePinDots() {
+  for (let i=0; i<4; i++) {
+    document.getElementById(`dot${i}`).classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+// ========== FERIADOS ==========
+function addFeriado() {
+  const sel = document.getElementById('feriadoDaySelect');
+  const val = sel.value;
+  if (!val) return;
+  if (!state.feriados.includes(val)) {
+    state.feriados.push(val);
+    saveState();
+  }
+  sel.value = '';
+  renderConfig();
+  renderDateBar();
+  renderPlantel();
+}
+
+function removeFeriado(dk) {
+  state.feriados = state.feriados.filter(f => f !== dk);
+  saveState();
+  renderConfig();
+  renderDateBar();
+  renderPlantel();
+}
+
+// ========== RESUMEN ==========
+function renderResumen() {
+  const allPersonas = [...PLANTEL_FIJO, ...state.eventuales, ...(state.adminUnlocked ? PLANTEL_ADMIN : [])];
+
+  let totalHrs = 0, totalMonto = 0, totalExtra = 0, personasActivas = 0;
+  const resumenEl = document.getElementById('resumenPersonas');
+  const incEl = document.getElementById('incentivosSection');
+  resumenEl.innerHTML = '';
+  incEl.innerHTML = '';
+
+  allPersonas.forEach(p => {
+    const t = calcTotalesPersona(p);
+    if (t.totalHrs === 0 && t.totalMonto === 0) return;
+    personasActivas++;
+    totalHrs += t.totalHrs;
+    totalMonto += t.totalMonto;
+    totalExtra += t.hsExtra;
+
+    const tipo = p.tipo === 'jornal_dia' ? `${t.totalHrs} días` : `${t.totalHrs.toFixed(1)}h`;
+
+    const row = document.createElement('div');
+    row.className = 'ps-row';
+    row.innerHTML = `
+      <div>
+        <div class="ps-name">${p.nombre}</div>
+        <div class="ps-detail">${p.rol} · ${tipo}</div>
+      </div>
+      <div>
+        <div class="ps-monto">$${formatNum(t.totalMonto)}</div>
+        <div class="ps-hrs">${t.incentivo>0?`incl. bono $${formatNum(t.incentivo)}`:''}</div>
+      </div>
+    `;
+    resumenEl.appendChild(row);
+
+    // Incentivos
+    const incRow = document.createElement('div');
+    incRow.style.cssText = 'margin-bottom:10px';
+    incRow.innerHTML = `
+      <div style="font-size:12px;font-weight:600;margin-bottom:4px">${p.nombre}</div>
+      <div class="incentivo-row">
+        <input type="number" placeholder="$0 (sin bono)"
+          value="${state.incentivos[p.id]||''}"
+          onchange="saveIncentivo('${p.id}',this.value)">
+        <span style="font-size:11px;color:var(--muted)">bono</span>
+      </div>
+    `;
+    incEl.appendChild(incRow);
+  });
+
+  document.getElementById('sumTotalHrs').textContent = totalHrs.toFixed(1);
+  document.getElementById('sumTotalMonto').textContent = '$' + formatNum(totalMonto);
+  document.getElementById('sumHrsExtra').textContent = totalExtra.toFixed(1);
+  document.getElementById('sumPersonas').textContent = personasActivas;
+
+  // Export subtitle
+  const start = new Date(state.weekStart);
+  const end = new Date(state.weekStart); end.setDate(end.getDate()+5);
+  document.getElementById('exportSubtitle').textContent =
+    `Semana ${formatDate(start)} al ${formatDate(end)} · ${personasActivas} personas · $${formatNum(totalMonto)}`;
+}
+
+function saveIncentivo(personId, val) {
+  const n = parseFloat(val) || 0;
+  if (n > 0) state.incentivos[personId] = n;
+  else delete state.incentivos[personId];
+  saveState();
+}
+
+// ========== CONFIG ==========
+function renderConfig() {
+  // Feriados chips
+  const fc = document.getElementById('feriadosConfig');
+  fc.innerHTML = '';
+  if (state.feriados.length === 0) {
+    fc.innerHTML = '<div style="font-size:12px;color:var(--muted)">No hay feriados cargados esta semana</div>';
+  } else {
+    state.feriados.forEach(dk => {
+      const idx = DIAS_KEY.indexOf(dk);
+      const chip = document.createElement('span');
+      chip.className = 'feriado-chip';
+      chip.innerHTML = `${DIAS_NOMBRE[idx]} <button onclick="removeFeriado('${dk}')">×</button>`;
+      fc.appendChild(chip);
+    });
+  }
+
+  // Day selector for feriados
+  const sel = document.getElementById('feriadoDaySelect');
+  sel.innerHTML = '<option value="">Seleccionar día</option>';
+  DIAS_KEY.forEach((dk,i) => {
+    const d = getDayDate(dk);
+    sel.innerHTML += `<option value="${dk}">${DIAS_NOMBRE[i]} ${formatDate(d)}</option>`;
+  });
+
+  // Week start
+  const ws = new Date(state.weekStart);
+  document.getElementById('weekStartInput').value = ws.toISOString().split('T')[0];
+
+  // Sheets URL
+  const cfg = loadConfig();
+  document.getElementById('sheetsUrl').value = cfg.sheetsUrl || '';
+}
+
+function updateWeekStart() {
+  const val = document.getElementById('weekStartInput').value;
+  state.weekStart = new Date(val + 'T00:00:00');
+  saveState();
+  renderDateBar();
+  updateWeekBadge();
+  renderConfig();
+}
+
+// ========== EXPORT EXCEL (XLSX con estilos) ==========
+function exportarExcel() {
+  if (typeof XLSX === 'undefined') {
+    showToast('Cargando librería...');
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+    script.onload = () => { if (typeof XLSXStyle !== "undefined") window.XLSX = XLSXStyle; _doExport(); };
+    document.head.appendChild(script);
+  } else {
+    _doExport();
+  }
+}
+
+// Formato número argentino: 1.290.000,00
+function fmtAR(n) {
+  if (n === '' || n === undefined || n === null) return '';
+  const num = parseFloat(n);
+  if (isNaN(num)) return n;
+  return num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function cellStyle(opts) {
+  const base = {
+    font: { name: 'Arial', sz: 10 },
+    alignment: { vertical: 'center', horizontal: opts.center ? 'center' : (opts.right ? 'right' : 'left'), wrapText: false },
+    border: {
+      top:    { style: 'thin', color: { rgb: 'CCCCCC' } },
+      bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+      left:   { style: 'thin', color: { rgb: 'CCCCCC' } },
+      right:  { style: 'thin', color: { rgb: 'CCCCCC' } },
+    }
+  };
+  if (opts.bold) base.font.bold = true;
+  if (opts.sz) base.font.sz = opts.sz;
+  if (opts.color) base.font.color = { rgb: opts.color };
+  if (opts.fill) base.fill = { fgColor: { rgb: opts.fill }, patternType: 'solid' };
+  if (opts.thickBottom) base.border.bottom = { style: 'medium', color: { rgb: '888888' } };
+  if (opts.thickTop) base.border.top = { style: 'medium', color: { rgb: '333333' } };
+  return base;
+}
+
+function makeCell(v, opts) {
+  const t = typeof v === 'number' ? 'n' : 's';
+  return { v, t, s: cellStyle(opts || {}) };
+}
+
+function _doExport() {
+  const allPersonas = [...PLANTEL_FIJO, ...state.eventuales, ...PLANTEL_ADMIN];
+  const start = new Date(state.weekStart);
+  const end   = new Date(state.weekStart); end.setDate(end.getDate() + 5);
+  const semLabel = `SEMANA DEL ${formatDate(start)} AL ${formatDate(end)}`;
+
+  // Colores
+  const C = {
+    azulOscuro:  '1A3A5C',
+    azulMedio:   '2563EB',
+    azulClaro:   'DBEAFE',
+    verdeOscuro: '065F46',
+    verdeClaro:  'D1FAE5',
+    grisHeader:  'F1F5F9',
+    grisRaya:    'F8FAFC',
+    amarillo:    'FEF3C7',
+    rojo:        'FEE2E2',
+    rojoTexto:   'B91C1C',
+    blanco:      'FFFFFF',
+    negro:       '111827',
+    grisTexto:   '6B7280',
+  };
+
+  const wb = XLSX.utils.book_new();
+
+  // ================================================================
+  // HOJA 1: JORNALES
+  // ================================================================
+  const ws = {};
+  let r = 0; // fila actual (0-indexed)
+
+  function setCell(col, row, val, opts) {
+    const addr = XLSX.utils.encode_cell({ c: col, r: row });
+    ws[addr] = makeCell(val, opts);
+  }
+
+  // Fila 0: Título principal
+  setCell(0, r, 'CENTRO DE PRODUCCION - JORNALES', {
+    bold: true, sz: 14, color: C.blanco, fill: C.azulOscuro, center: false
+  });
+  for (let c = 1; c <= 12; c++) setCell(c, r, '', { fill: C.azulOscuro });
+  r++;
+
+  // Fila 1: Semana
+  setCell(0, r, semLabel, { bold: true, sz: 11, color: C.blanco, fill: C.azulMedio });
+  for (let c = 1; c <= 12; c++) setCell(c, r, '', { fill: C.azulMedio });
+  r++;
+
+  // Fila 2: vacía
+  r++;
+
+  // Fila 3: Headers
+  const headers = ['PERSONAL','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO','HRS EXTRA','TOTAL HRS','VALOR HR','INCENTIVO','TOTAL ($)','OBSERVACIONES'];
+  headers.forEach((h, c) => {
+    setCell(c, r, h, { bold: true, sz: 10, color: C.blanco, fill: C.azulMedio, center: c > 0 && c < 12, thickBottom: true });
+  });
+  r++;
+
+  const dataStartRow = r;
+  let grandTotal = 0, grandHrs = 0, grandExtra = 0;
+  let rowIdx = 0;
+
+  allPersonas.forEach(p => {
+    const t = calcTotalesPersona(p);
+    if (t.totalHrs === 0 && t.totalMonto === 0) return;
+    const inic = state.incentivos[p.id] || 0;
+    const isAyelen = p.id === 'ayelen';
+    const rowFill = rowIdx % 2 === 0 ? C.blanco : C.grisRaya;
+    const nombreColor = isAyelen ? C.azulMedio : C.negro;
+
+    // Nombre
+    setCell(0, r, p.nombre, { bold: isAyelen, color: nombreColor, fill: rowFill });
+
+    if (p.tipo === 'jornal_dia') {
+      DIAS_KEY.forEach((dk, i) => {
+        const reg = getRegistro(p.id, dk) || {};
+        setCell(i + 1, r, reg.trabajo ? '✓' : '', { center: true, fill: reg.trabajo ? C.verdeClaro : rowFill, color: reg.trabajo ? C.verdeOscuro : C.grisTexto, bold: !!reg.trabajo });
+      });
+      setCell(7, r, '—', { center: true, fill: rowFill, color: C.grisTexto });
+      setCell(8, r, t.totalHrs + ' días', { center: true, fill: rowFill });
+      setCell(9, r, p.tarifa + '/día', { center: true, fill: rowFill });
+      setCell(10, r, inic ? fmtAR(inic) : '—', { center: true, fill: inic ? C.amarillo : rowFill });
+      setCell(11, r, fmtAR(t.totalMonto), { bold: true, right: true, fill: C.verdeClaro, color: C.verdeOscuro });
+      setCell(12, r, '—', { fill: rowFill, color: C.grisTexto });
+    } else {
+      DIAS_KEY.forEach((dk, i) => {
+        const reg = getRegistro(p.id, dk) || {};
+        const isFeriado = state.feriados.includes(dk);
+        if (reg.ausente) {
+          setCell(i + 1, r, reg.tipoAusencia || 'AUSENTE', { center: true, fill: C.rojo, color: C.rojoTexto, sz: 8 });
+        } else {
+          const hrs = calcHoras(reg, p, dk);
+          const val = hrs.total > 0 ? hrs.total : '';
+          const esExtra = (dk === 'sab') || hrs.extras > 0;
+          const esFeriado2 = isFeriado && hrs.total > 0;
+          const cellFill = esFeriado2 ? C.amarillo : (esExtra && val ? C.azulClaro : rowFill);
+          setCell(i + 1, r, val, { center: true, fill: cellFill, bold: esExtra && !!val });
+        }
+      });
+      setCell(7, r, t.hsExtra > 0 ? t.hsExtra : '', { center: true, fill: t.hsExtra > 0 ? C.azulClaro : rowFill, bold: t.hsExtra > 0 });
+      setCell(8, r, t.totalHrs || '', { center: true, fill: rowFill });
+      setCell(9, r, fmtAR(p.tarifa), { center: true, fill: rowFill, color: C.grisTexto });
+      setCell(10, r, inic ? fmtAR(inic) : '', { center: true, fill: inic ? C.amarillo : rowFill });
+      setCell(11, r, fmtAR(t.totalMonto), { bold: true, right: true, fill: C.verdeClaro, color: C.verdeOscuro });
+
+      const obs = DIAS_KEY.map(dk => {
+        const reg = getRegistro(p.id, dk) || {};
+        const parts = [];
+        if (reg.ausente) parts.push(`${DIAS_NOMBRE[DIAS_KEY.indexOf(dk)]}: ${reg.tipoAusencia||'Ausente'}`);
+        if (reg.obs) parts.push(reg.obs);
+        return parts.join(' ');
+      }).filter(Boolean).join(' | ');
+      setCell(12, r, obs, { fill: rowFill, color: C.grisTexto, sz: 9 });
+    }
+
+    grandTotal += t.totalMonto;
+    grandHrs   += t.totalHrs;
+    grandExtra += t.hsExtra || 0;
+    rowIdx++; r++;
+  });
+
+  // Fila vacía separadora
+  r++;
+
+  // Fila TOTAL
+  setCell(0, r, 'TOTAL SEMANA', { bold: true, sz: 11, color: C.blanco, fill: C.azulOscuro, thickTop: true });
+  for (let c = 1; c <= 6; c++) setCell(c, r, '', { fill: C.azulOscuro });
+  setCell(7, r, grandExtra || '', { bold: true, center: true, color: C.blanco, fill: C.azulOscuro });
+  setCell(8, r, grandHrs || '', { bold: true, center: true, color: C.blanco, fill: C.azulOscuro });
+  setCell(9, r, '', { fill: C.azulOscuro });
+  setCell(10, r, '', { fill: C.azulOscuro });
+  setCell(11, r, fmtAR(grandTotal), { bold: true, sz: 12, right: true, color: C.blanco, fill: C.verdeOscuro });
+  setCell(12, r, '', { fill: C.azulOscuro });
+  r += 2;
+
+  // Feriados
+  const feriadosStr = state.feriados.length > 0
+    ? state.feriados.map(dk => DIAS_NOMBRE[DIAS_KEY.indexOf(dk)]).join(', ')
+    : 'Ninguno';
+  setCell(0, r, `⚠  FERIADOS: ${feriadosStr}`, { bold: true, color: state.feriados.length > 0 ? 'B45309' : C.grisTexto, fill: state.feriados.length > 0 ? C.amarillo : C.grisHeader });
+  for (let c = 1; c <= 12; c++) setCell(c, r, '', { fill: state.feriados.length > 0 ? C.amarillo : C.grisHeader });
+
+  // Merge celdas: título y semana
+  ws['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:12} },
+    { s:{r:1,c:0}, e:{r:1,c:12} },
+    { s:{r:r,c:0}, e:{r:r,c:12} },
+  ];
+
+  ws['!ref'] = XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:r,c:12} });
+  ws['!cols'] = [
+    { wch: 22 },
+    { wch: 11 },{ wch: 11 },{ wch: 11 },{ wch: 11 },{ wch: 11 },{ wch: 11 },
+    { wch: 10 },{ wch: 10 },{ wch: 12 },{ wch: 13 },{ wch: 14 },{ wch: 38 }
+  ];
+  ws['!rows'] = [{ hpt: 28 }, { hpt: 22 }]; // altura filas título
+
+  XLSX.utils.book_append_sheet(wb, ws, 'JORNALES');
+
+  // ================================================================
+  // HOJA 2: TESORERÍA (limpia, solo totales)
+  // ================================================================
+  const ws2 = {};
+  let r2 = 0;
+
+  function setCell2(col, row, val, opts) {
+    ws2[XLSX.utils.encode_cell({ c: col, r: row })] = makeCell(val, opts);
+  }
+
+  setCell2(0, r2, 'RESUMEN PARA TESORERÍA', { bold: true, sz: 14, color: C.blanco, fill: C.azulOscuro });
+  for (let c = 1; c <= 4; c++) setCell2(c, r2, '', { fill: C.azulOscuro });
+  r2++;
+  setCell2(0, r2, semLabel, { bold: true, color: C.blanco, fill: C.azulMedio });
+  for (let c = 1; c <= 4; c++) setCell2(c, r2, '', { fill: C.azulMedio });
+  r2 += 2;
+
+  ['PERSONAL','ROL','HRS / DÍAS','INCENTIVO ($)','TOTAL A PAGAR ($)'].forEach((h, c) => {
+    setCell2(c, r2, h, { bold: true, color: C.blanco, fill: C.azulMedio, center: c > 1, thickBottom: true });
+  });
+  r2++;
+
+  let gt2 = 0, idx2 = 0;
+  allPersonas.forEach(p => {
+    const t = calcTotalesPersona(p);
+    if (t.totalMonto === 0) return;
+    const inic = state.incentivos[p.id] || 0;
+    const hrsLabel = p.tipo === 'jornal_dia' ? `${t.totalHrs} días` : `${t.totalHrs.toFixed(1)} hs`;
+    const rf = idx2 % 2 === 0 ? C.blanco : C.grisRaya;
+    setCell2(0, r2, p.nombre, { bold: p.id === 'ayelen', fill: rf });
+    setCell2(1, r2, p.rol, { fill: rf, color: C.grisTexto });
+    setCell2(2, r2, hrsLabel, { center: true, fill: rf });
+    setCell2(3, r2, inic ? fmtAR(inic) : '', { center: true, fill: inic ? C.amarillo : rf });
+    setCell2(4, r2, fmtAR(t.totalMonto), { bold: true, right: true, fill: C.verdeClaro, color: C.verdeOscuro });
+    gt2 += t.totalMonto; idx2++; r2++;
+  });
+
+  r2++;
+  setCell2(0, r2, 'TOTAL A PAGAR', { bold: true, sz: 12, color: C.blanco, fill: C.azulOscuro });
+  setCell2(1, r2, '', { fill: C.azulOscuro });
+  setCell2(2, r2, '', { fill: C.azulOscuro });
+  setCell2(3, r2, '', { fill: C.azulOscuro });
+  setCell2(4, r2, fmtAR(gt2), { bold: true, sz: 13, right: true, color: C.blanco, fill: C.verdeOscuro });
+
+  ws2['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:4} },
+    { s:{r:1,c:0}, e:{r:1,c:4} },
+    { s:{r:r2,c:0}, e:{r:r2,c:3} },
+  ];
+  ws2['!ref'] = XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:r2,c:4} });
+  ws2['!cols'] = [{ wch: 22 }, { wch: 20 }, { wch: 12 }, { wch: 14 }, { wch: 18 }];
+
+  XLSX.utils.book_append_sheet(wb, ws2, 'TESORERÍA');
+
+  // Descargar
+  const weekStr = start.toISOString().split('T')[0];
+  XLSX.writeFile(wb, `Jornales_CDP_${weekStr}.xlsx`);
+  showToast('✓ Excel descargado');
+}
+
+function copiarResumenWA() {
+  const allPersonas = [...PLANTEL_FIJO, ...state.eventuales, ...(state.adminUnlocked?PLANTEL_ADMIN:[])];
+  const start = new Date(state.weekStart);
+  const end = new Date(state.weekStart); end.setDate(end.getDate()+5);
+
+  let txt = `📋 *JORNALES CDP 24ST*\n`;
+  txt += `_Semana ${formatDate(start)} al ${formatDate(end)}_\n\n`;
+
+  let grandTotal = 0;
+  allPersonas.forEach(p => {
+    const t = calcTotalesPersona(p);
+    if (t.totalMonto === 0) return;
+    txt += `• *${p.nombre}*: ${p.tipo==='jornal_dia'?t.totalHrs+' días':t.totalHrs.toFixed(1)+'hs'} → $${formatNum(t.totalMonto)}\n`;
+    grandTotal += t.totalMonto;
+  });
+
+  txt += `\n💰 *TOTAL A PAGAR: $${formatNum(grandTotal)}*`;
+  if (state.feriados.length > 0) {
+    txt += `\n\n⚠️ Feriados: ${state.feriados.map(dk=>DIAS_NOMBRE[DIAS_KEY.indexOf(dk)]).join(', ')}`;
+  }
+
+  navigator.clipboard.writeText(txt).then(() => showToast('✓ Copiado para WhatsApp'));
+}
+
+function nuevaSemana() {
+  if (!confirm('¿Iniciar nueva semana? Se borrarán todos los registros actuales.')) return;
+  state.registros = {};
+  state.eventuales = [];
+  state.feriados = [];
+  state.incentivos = {};
+  state.weekStart = getMonday(new Date());
+  state.currentDay = getCurrentDayKey();
+  saveState();
+  renderDateBar();
+  renderPlantel();
+  renderResumen();
+  renderConfig();
+  updateWeekBadge();
+  showToast('✓ Nueva semana iniciada');
+}
+
+// ========== PERSIST ==========
+function saveState() {
+  try {
+    const toSave = {
+      weekStart: state.weekStart,
+      registros: state.registros,
+      eventuales: state.eventuales,
+      feriados: state.feriados,
+      incentivos: state.incentivos,
+      currentDay: state.currentDay,
+    };
+    localStorage.setItem('jornales_cdp_v1', JSON.stringify(toSave));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('jornales_cdp_v1');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      state.weekStart = saved.weekStart ? new Date(saved.weekStart) : getMonday(new Date());
+      state.registros = saved.registros || {};
+      state.eventuales = saved.eventuales || [];
+      state.feriados = saved.feriados || [];
+      state.incentivos = saved.incentivos || {};
+      state.currentDay = saved.currentDay || getCurrentDayKey();
+    } else {
+      state.weekStart = getMonday(new Date());
+    }
+  } catch(e) {
+    state.weekStart = getMonday(new Date());
+  }
+}
+
+function loadConfig() {
+  try {
+    return JSON.parse(localStorage.getItem('jornales_config_v1') || '{}');
+  } catch(e) { return {}; }
+}
+
+function saveConfig() {
+  const cfg = {
+    sheetsUrl: document.getElementById('sheetsUrl').value,
+  };
+  localStorage.setItem('jornales_config_v1', JSON.stringify(cfg));
+  showToast('Configuración guardada');
+}
+
+// ========== UTILS ==========
+function formatNum(n) {
+  return Math.round(n).toLocaleString('es-AR');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ========== START ==========
+init();
+</script>
+</body>
+</html>
