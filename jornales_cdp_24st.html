@@ -923,6 +923,7 @@ function setRegistro(personId, dayKey, data) {
   if (!state.registros[personId]) state.registros[personId] = {};
   state.registros[personId][dayKey] = { ...(state.registros[personId][dayKey]||{}), ...data };
   saveState();
+  autoSync();
 }
 
 function guardarHorasManual(personId, dk) {
@@ -1210,6 +1211,98 @@ function updateWeekStart() {
   renderConfig();
 }
 
+
+
+// ========== AUTO-SYNC GOOGLE SHEETS ==========
+let autoSyncTimer = null;
+
+function autoSync() {
+  // Debounce: espera 3 segundos después del último cambio
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(() => {
+    _doAutoSync();
+  }, 3000);
+}
+
+function _doAutoSync() {
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycby8A4VxF6LLffJN1bskPXF2eNnVqY46OZigNWjkgxigFGRCQwAkGKniUzJPQJIX8U5k/exec';
+  const allPersonas = [...PLANTEL_FIJO, ...state.eventuales, ...PLANTEL_ADMIN];
+  const start = new Date(state.weekStart);
+  const end = new Date(state.weekStart); end.setDate(end.getDate() + 5);
+  const semana = start.toISOString().split('T')[0] + '_al_' + end.toISOString().split('T')[0];
+
+  const filas = [];
+  allPersonas.forEach(p => {
+    const t = calcTotalesPersona(p);
+    if (t.totalHrs === 0 && t.totalMonto === 0) return;
+    const inic = state.incentivos[p.id] || 0;
+
+    if (p.tipo === 'jornal_dia') {
+      const dias = DIAS_KEY.map(dk => {
+        const r = getRegistro(p.id, dk) || {};
+        return r.trabajo ? 1 : 0;
+      });
+      filas.push([p.nombre, p.rol, ...dias, 0, t.totalHrs + ' dias', p.tarifa + '/dia', inic, t.totalMonto]);
+    } else {
+      const hrsDia = DIAS_KEY.map(dk => {
+        const r = getRegistro(p.id, dk) || {};
+        if (r.ausente) return r.tipoAusencia || 'AUSENTE';
+        const hrs = calcHoras(r, p, dk);
+        return hrs.total || 0;
+      });
+      filas.push([p.nombre, p.rol, ...hrsDia, t.hsExtra || 0, t.totalHrs, p.tarifa, inic, t.totalMonto]);
+    }
+  });
+
+  if (filas.length === 0) return; // No enviar si no hay datos
+
+  const payload = { semana, filas };
+
+  // Mostrar indicador sutil
+  showSyncIndicator('syncing');
+
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    showSyncIndicator('ok');
+  }).catch(() => {
+    showSyncIndicator('error');
+  });
+}
+
+function showSyncIndicator(status) {
+  let indicator = document.getElementById('syncIndicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'syncIndicator';
+    indicator.style.cssText = 'position:fixed;bottom:60px;right:16px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;z-index:999;transition:all 0.3s;';
+    document.body.appendChild(indicator);
+  }
+  if (status === 'syncing') {
+    indicator.style.background = 'rgba(245,158,11,0.2)';
+    indicator.style.color = '#f59e0b';
+    indicator.style.border = '1px solid #f59e0b';
+    indicator.textContent = '⏳ Sincronizando...';
+    indicator.style.opacity = '1';
+  } else if (status === 'ok') {
+    indicator.style.background = 'rgba(16,185,129,0.2)';
+    indicator.style.color = '#10b981';
+    indicator.style.border = '1px solid #10b981';
+    indicator.textContent = '☁️ Sincronizado';
+    indicator.style.opacity = '1';
+    setTimeout(() => { indicator.style.opacity = '0'; }, 3000);
+  } else {
+    indicator.style.background = 'rgba(239,68,68,0.2)';
+    indicator.style.color = '#ef4444';
+    indicator.style.border = '1px solid #ef4444';
+    indicator.textContent = '⚠️ Sin conexión';
+    indicator.style.opacity = '1';
+    setTimeout(() => { indicator.style.opacity = '0'; }, 4000);
+  }
+}
 
 // ========== SYNC GOOGLE SHEETS ==========
 function syncSheets() {
